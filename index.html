@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বাংলা ই-পেপার প্ল্যাটফর্ম</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.maateen.me/solaiman-lipi/font.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <style>
+        body { font-family: 'SolaimanLipi', sans-serif; scroll-behavior: smooth; }
+        .page { display: none; }
+        .page.active { display: block; }
+        #pdf-viewer {
+            display: flex;
+            align-items: flex-start; /* Aligns pages to the top */
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            overflow-x: auto;
+            background-color: #f0f2f5;
+            min-height: calc(100vh - 60px); /* Adjust based on header height */
+        }
+        .pdf-page-canvas {
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 90vw;
+            height: auto;
+            background-color: white;
+            transition: transform 0.2s;
+        }
+        .blur-page { filter: blur(8px); pointer-events: none; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Main Container -->
+    <div id="app">
+
+        <!-- 1. Landing Page for SaaS -->
+        <div id="landingPage" class="page active">
+            <header class="bg-white shadow-md">
+                <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-gray-800">ই-পেপার সল্যুশন</h1>
+                    <div>
+                        <button id="loginBtnLanding" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">লগইন</button>
+                        <button id="signupBtnLanding" class="ml-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">রেজিস্ট্রেশন</button>
+                    </div>
+                </nav>
+            </header>
+            <main class="container mx-auto text-center py-20 px-6">
+                <h2 class="text-5xl font-bold text-gray-900 mb-4">আপনার পত্রিকার জন্য আধুনিক ই-পেপার প্ল্যাটফর্ম</h2>
+                <p class="text-xl text-gray-600 mb-8">সহজেই আপনার প্রিন্ট সংস্করণ অনলাইনে প্রকাশ করুন এবং পাঠকদের কাছে পৌঁছে দিন।</p>
+                <button onclick="document.getElementById('signupBtnLanding').click()" class="bg-blue-600 text-white font-bold text-xl px-8 py-4 rounded-full shadow-lg hover:bg-blue-700">আজই শুরু করুন</button>
+            </main>
+        </div>
+
+        <!-- 2. Auth Page (Login/Signup for Publishers) -->
+        <div id="authPage" class="page">
+            <div class="flex items-center justify-center min-h-screen bg-gray-200">
+                <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
+                    <h2 id="authTitle" class="text-3xl font-bold text-center text-gray-800">প্রকাশক লগইন</h2>
+                    <form id="authForm" class="space-y-6">
+                        <input id="orgName" type="text" placeholder="আপনার পত্রিকার নাম" class="w-full px-4 py-3 text-gray-700 bg-gray-100 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input id="email" type="email" placeholder="ইমেইল অ্যাড্রেস" required class="w-full px-4 py-3 text-gray-700 bg-gray-100 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input id="password" type="password" placeholder="পাসওয়ার্ড" required class="w-full px-4 py-3 text-gray-700 bg-gray-100 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button id="authButton" type="submit" class="w-full py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">লগইন</button>
+                    </form>
+                    <p class="text-sm text-center text-gray-600">
+                        <span id="authToggleText">একাউন্ট নেই?</span>
+                        <button id="authToggle" class="ml-1 font-semibold text-blue-600 hover:underline">রেজিস্ট্রেশন করুন</button>
+                    </p>
+                    <button id="backToHomeAuth" class="w-full mt-4 text-center text-sm text-gray-500 hover:text-blue-600">হোমপেজে ফিরে যান</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Publisher Admin Dashboard -->
+        <div id="dashboardPage" class="page">
+            <header class="bg-white shadow-md flex justify-between items-center px-6 py-4">
+                 <h1 class="text-2xl font-bold text-gray-800" id="publisherNameHeader">প্রকাশকের ড্যাশবোর্ড</h1>
+                 <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">লগআউট</button>
+            </header>
+            <main class="container mx-auto p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">আপনার ই-পেপার সংস্করণসমূহ</h2>
+                    <button id="uploadEpaperBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 font-semibold"><i class="fas fa-upload mr-2"></i>নতুন সংস্করণ আপলোড করুন</button>
+                </div>
+                <div id="epaperList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- E-paper cards will be dynamically inserted here -->
+                </div>
+            </main>
+        </div>
+
+        <!-- 4. E-paper Reading Page (for readers) -->
+        <div id="readerPage" class="page">
+             <header class="bg-white shadow-md sticky top-0 z-20">
+                <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+                    <h1 id="readerPublisherName" class="text-2xl font-bold text-gray-800">পত্রিকার নাম</h1>
+                     <div class="flex items-center gap-4">
+                        <span id="page-counter" class="text-lg font-semibold"></span>
+                        <button id="zoom-in" class="p-2 rounded-full hover:bg-gray-200"><i class="fas fa-search-plus"></i></button>
+                        <button id="zoom-out" class="p-2 rounded-full hover:bg-gray-200"><i class="fas fa-search-minus"></i></button>
+                        <button id="backToHomeReader" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300">হোমপেজ</button>
+                    </div>
+                </div>
+            </header>
+            <main>
+                <div id="pdf-viewer-container" class="relative">
+                    <div id="pdf-viewer"></div>
+                    <div id="subscription-overlay" class="hidden absolute inset-0 bg-black bg-opacity-60 flex-col items-center justify-center text-white text-center p-8 z-10">
+                        <h3 class="text-4xl font-bold mb-4">সম্পূর্ণ পত্রিকা পড়তে সাবস্ক্রাইব করুন!</h3>
+                        <p class="text-xl mb-6">মাত্র কয়েকটি পাতা বিনামূল্যে পড়ার সুযোগ রয়েছে। সম্পূর্ণ অভিজ্ঞতা পেতে আজই সাবস্ক্রাইব করুন।</p>
+                        <button class="bg-green-600 text-white font-bold text-xl px-8 py-4 rounded-full shadow-lg hover:bg-green-700">সাবস্ক্রাইব করুন</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+        // --- IMPORTANT: Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBHjAaLeK3oa1r7fjaM25ILmQ4g3oIeh6g",
+            authDomain: "epaperbd-5cd65.firebaseapp.com",
+            projectId: "epaperbd-5cd65",
+            storageBucket: "epaperbd-5cd65.firebasestorage.app",
+            messagingSenderId: "1087957180039",
+            appId: "1:1087957180039:web:3c89510a3653646a33a222"
+        };
+        
+        // Initialize Firebase
+        const fbApp = initializeApp(firebaseConfig);
+        const auth = getAuth(fbApp);
+        const db = getFirestore(fbApp);
+        const storage = getStorage(fbApp);
+
+        // Global State
+        let currentUser = null;
+        let currentPublisher = null;
+        let unsubs = [];
+        let pdfDoc = null;
+        let scale = 1.2;
+        const FREE_PAGE_LIMIT = 2;
+
+
+        // --- Page Navigation ---
+        const pages = document.querySelectorAll('.page');
+        function showPage(pageId, params = {}) {
+            pages.forEach(p => p.classList.remove('active'));
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+            if(pageId === 'readerPage' && params.orgId && params.epaperId) {
+                loadEpaperForReader(params.orgId, params.epaperId);
+            }
+        }
+        
+        // Simple client-side routing based on URL hash
+        function handleHashChange() {
+            const hash = window.location.hash.slice(1); // remove '#'
+            const [pageId, ...params] = hash.split('/');
+            
+            if (pageId === 'reader' && params.length === 2) {
+                const [orgId, epaperId] = params;
+                showPage('readerPage', { orgId, epaperId });
+            } else if (pageId) {
+                showPage(pageId);
+            } else {
+                showPage('landingPage');
+            }
+        }
+
+        window.addEventListener('hashchange', handleHashChange);
+        window.addEventListener('DOMContentLoaded', handleHashChange);
+
+
+        // --- Publisher Authentication ---
+        const orgNameInput = document.getElementById('orgName');
+        let isLogin = true;
+
+        document.getElementById('loginBtnLanding').addEventListener('click', () => window.location.hash = 'authPage');
+        document.getElementById('signupBtnLanding').addEventListener('click', () => {
+            isLogin = false;
+            updateAuthUI();
+            window.location.hash = 'authPage';
+        });
+        document.getElementById('backToHomeAuth').addEventListener('click', () => window.location.hash = 'landingPage');
+
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                currentUser = user;
+                getDoc(doc(db, "publishers", user.uid)).then(docSnap => {
+                    if (docSnap.exists()) {
+                        currentPublisher = { id: user.uid, ...docSnap.data() };
+                        document.getElementById('publisherNameHeader').textContent = currentPublisher.name;
+                        window.location.hash = 'dashboardPage';
+                        initializeDashboardListeners();
+                    }
+                });
+            } else {
+                currentUser = null;
+                currentPublisher = null;
+                unsubs.forEach(unsub => unsub());
+                unsubs = [];
+                // If user is not logged in and not on reader page, go to landing page
+                if (!window.location.hash.startsWith('#reader')) {
+                    window.location.hash = 'landingPage';
+                }
+            }
+        });
+
+        document.getElementById('authForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const orgName = orgNameInput.value;
+
+            try {
+                if (isLogin) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    if (!orgName) {
+                        Swal.fire('ত্রুটি', 'পত্রিকার নাম দিন।', 'error');
+                        return;
+                    }
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, "publishers", userCredential.user.uid), {
+                        name: orgName,
+                        email: email,
+                        createdAt: new Date()
+                    });
+                }
+            } catch (err) {
+                Swal.fire('ত্রুটি', err.message, 'error');
+            }
+        });
+
+        function updateAuthUI() {
+            orgNameInput.style.display = isLogin ? 'none' : 'block';
+            document.getElementById('authTitle').innerText = isLogin ? 'প্রকাশক লগইন' : 'নতুন প্রকাশক রেজিস্ট্রেশন';
+            document.getElementById('authButton').innerText = isLogin ? 'লগইন' : 'রেজিস্ট্রেশন';
+            document.getElementById('authToggleText').innerText = isLogin ? "একাউন্ট নেই?" : 'ইতিমধ্যেই একাউন্ট আছে?';
+            document.getElementById('authToggle').innerText = isLogin ? 'রেজিস্ট্রেশন করুন' : 'লগইন করুন';
+        }
+        document.getElementById('authToggle').addEventListener('click', () => {
+            isLogin = !isLogin;
+            updateAuthUI();
+        });
+        updateAuthUI();
+        
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+
+        // --- Publisher Dashboard ---
+        const uploadEpaperBtn = document.getElementById('uploadEpaperBtn');
+        const epaperListContainer = document.getElementById('epaperList');
+        
+        function initializeDashboardListeners() {
+            if (!currentPublisher) return;
+            const q = collection(db, `publishers/${currentPublisher.id}/epapers`);
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                const epapers = [];
+                querySnapshot.forEach((doc) => {
+                    epapers.push({ id: doc.id, ...doc.data() });
+                });
+                renderEpaperList(epapers);
+            });
+            unsubs.push(unsubscribe);
+        }
+
+        uploadEpaperBtn.addEventListener('click', async () => {
+            const { value: file } = await Swal.fire({
+                title: 'আপনার PDF ফাইলটি সিলেক্ট করুন',
+                input: 'file',
+                inputAttributes: {
+                    'accept': 'application/pdf',
+                    'aria-label': 'Upload your PDF'
+                }
+            });
+
+            if (file) {
+                const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+                const storagePath = `epapers/${currentPublisher.id}/${date}_${file.name}`;
+                const storageRef = ref(storage, storagePath);
+
+                Swal.fire({
+                    title: 'আপলোড হচ্ছে...',
+                    text: 'অনুগ্রহ করে অপেক্ষা করুন।',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading() }
+                });
+
+                try {
+                    const snapshot = await uploadBytes(storageRef, file);
+                    const downloadURL = await getDownloadURL(snapshot.ref);
+
+                    await addDoc(collection(db, `publishers/${currentPublisher.id}/epapers`), {
+                        date: date,
+                        fileName: file.name,
+                        url: downloadURL,
+                        storagePath: storagePath,
+                        createdAt: new Date()
+                    });
+                    Swal.fire('সফল', 'ই-পেপার সফলভাবে আপলোড হয়েছে!', 'success');
+                } catch (e) {
+                    Swal.fire('ত্রুটি', 'আপলোড করা যায়নি। আবার চেষ্টা করুন।', 'error');
+                }
+            }
+        });
+
+        function renderEpaperList(epapers) {
+            epaperListContainer.innerHTML = '';
+            if (epapers.length === 0) {
+                epaperListContainer.innerHTML = `<p class="col-span-full text-center text-gray-500">এখনও কোনো সংস্করণ আপলোড করা হয়নি।</p>`;
+                return;
+            }
+            epapers.sort((a,b) => b.createdAt.seconds - a.createdAt.seconds).forEach(epaper => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-md p-4 flex flex-col justify-between';
+                const shareableLink = `${window.location.origin}${window.location.pathname}#reader/${currentPublisher.id}/${epaper.id}`;
+
+                card.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-lg">${new Date(epaper.date).toLocaleDateString('bn-BD')}</h3>
+                        <p class="text-sm text-gray-500 truncate">${epaper.fileName}</p>
+                    </div>
+                    <div class="mt-4 flex flex-col gap-2">
+                         <button onclick="window.copyToClipboard('${shareableLink}')" class="w-full text-sm bg-green-100 text-green-700 px-3 py-1.5 rounded-md hover:bg-green-200"><i class="fas fa-copy mr-1"></i> লিঙ্ক কপি করুন</button>
+                         <button onclick="window.open('${shareableLink}', '_blank')" class="w-full text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200"><i class="fas fa-eye mr-1"></i> দেখুন</button>
+                         <button onclick="window.deleteEpaper('${epaper.id}', '${epaper.storagePath}')" class="w-full text-sm bg-red-100 text-red-700 px-3 py-1.5 rounded-md hover:bg-red-200"><i class="fas fa-trash-alt mr-1"></i> মুছুন</button>
+                    </div>
+                `;
+                epaperListContainer.appendChild(card);
+            });
+        }
+        
+        window.copyToClipboard = (text) => {
+             navigator.clipboard.writeText(text).then(() => {
+                Swal.fire({ icon: 'success', title: 'লিঙ্ক কপি হয়েছে!', showConfirmButton: false, timer: 1500 });
+            });
+        }
+        
+        window.deleteEpaper = async (epaperId, storagePath) => {
+            const result = await Swal.fire({
+                title: 'আপনি কি নিশ্চিত?',
+                text: "এটি আর ফিরিয়ে আনা যাবে না!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'হ্যাঁ, মুছে ফেলুন!',
+                cancelButtonText: 'না'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    // Important: Must check if currentPublisher exists before deleting
+                    if (!currentPublisher) {
+                        Swal.fire('ত্রুটি', 'অনুগ্রহ করে আবার লগইন করুন।', 'error');
+                        return;
+                    }
+                    await deleteDoc(doc(db, `publishers/${currentPublisher.id}/epapers`, epaperId));
+                    const fileRef = ref(storage, storagePath);
+                    await deleteObject(fileRef);
+                    Swal.fire('মুছে ফেলা হয়েছে!', 'আপনার ই-পেপার ফাইলটি মুছে ফেলা হয়েছে।', 'success');
+                } catch (error) {
+                    Swal.fire('ত্রুটি', 'ফাইলটি মোছা যায়নি।', 'error');
+                }
+            }
+        };
+
+        // --- E-paper Reader Page ---
+        const pdfViewerContainer = document.getElementById('pdf-viewer');
+        const pageCounter = document.getElementById('page-counter');
+        const subOverlay = document.getElementById('subscription-overlay');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
+
+        async function loadEpaperForReader(orgId, epaperId) {
+            pdfViewerContainer.innerHTML = `<div class="text-center p-10"><p>লোড হচ্ছে...</p></div>`;
+            
+            const orgDoc = await getDoc(doc(db, 'publishers', orgId));
+            const epaperDoc = await getDoc(doc(db, `publishers/${orgId}/epapers`, epaperId));
+            
+            if (!orgDoc.exists() || !epaperDoc.exists()) {
+                 pdfViewerContainer.innerHTML = `<div class="text-center p-10"><p class="text-red-500">ই-পেপার খুঁজে পাওয়া যায়নি।</p></div>`;
+                 return;
+            }
+
+            document.getElementById('readerPublisherName').textContent = orgDoc.data().name;
+            document.getElementById('backToHomeReader').onclick = () => window.location.hash = 'landingPage';
+
+            const url = epaperDoc.data().url;
+            const proxyUrl = `https://cors-anywhere.herokuapp.com/${url}`; // Using a proxy for CORS issues during development
+            
+            try {
+                const loadingTask = pdfjsLib.getDocument(proxyUrl);
+                pdfDoc = await loadingTask.promise;
+                renderAllPages();
+            } catch (err) {
+                 pdfViewerContainer.innerHTML = `<div class="text-center p-10"><p class="text-red-500">ফাইল লোড করা যায়নি। CORS সমস্যা হতে পারে।</p><p class="text-sm">${err.message}</p></div>`;
+            }
+        }
+        
+        async function renderAllPages() {
+            if (!pdfDoc) return;
+            pdfViewerContainer.innerHTML = '';
+            pageCounter.textContent = `মোট পৃষ্ঠা: ${pdfDoc.numPages}`;
+            
+            for (let num = 1; num <= pdfDoc.numPages; num++) {
+                const page = await pdfDoc.getPage(num);
+                const viewport = page.getViewport({ scale: scale });
+
+                const canvas = document.createElement('canvas');
+                canvas.className = 'pdf-page-canvas';
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                const context = canvas.getContext('2d');
+                
+                const renderContext = { canvasContext: context, viewport: viewport };
+                await page.render(renderContext).promise;
+                
+                const pageContainer = document.createElement('div');
+                pageContainer.className = 'relative';
+
+                if(num > FREE_PAGE_LIMIT) {
+                     canvas.classList.add('blur-page');
+                     pageContainer.onclick = () => subOverlay.style.display = 'flex';
+                }
+                
+                pageContainer.appendChild(canvas);
+                pdfViewerContainer.appendChild(pageContainer);
+            }
+        }
+        
+        function updateZoom(newScale) {
+            scale = Math.max(0.5, Math.min(3, newScale));
+            renderAllPages();
+        }
+        document.getElementById('zoom-in').addEventListener('click', () => updateZoom(scale + 0.2));
+        document.getElementById('zoom-out').addEventListener('click', () => updateZoom(scale - 0.2));
+
+    </script>
+
+</body>
+</html>
